@@ -1,0 +1,8 @@
+mysql:
+  addr: "127.0.0.1:3306"        # 数据库地址（含端口）
+  username: "root"              # 用户名
+  password: "123456"            # 密码
+  database: "testdb"            # 数据库名
+  max-idle-conns: 10            # 最大空闲连接数
+  max-open-conns: 50            # 最大打开连接数
+  max-conns-life-time: 3600     # 连接最大存活时间（秒）
