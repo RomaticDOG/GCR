@@ -1,9 +1,6 @@
 package app
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/RomaticDOG/GCR/FastGO/cmd/app/options"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -27,19 +24,9 @@ func NewCommand() *cobra.Command {
 		SilenceUsage: true,
 		// 指定调用 cmd.Execute() 时执行的 run 函数
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// 将读取到的配置项解析到 opts 中
-			if err := viper.Unmarshal(&opts); err != nil {
-				cobra.CheckErr(err)
-				return err
-			}
-			if err := opts.Validate(); err != nil {
-				cobra.CheckErr(err)
-				return err
-			}
-			// 输出一个 json 看看读取到的配置项是什么样的
-			j, _ := json.MarshalIndent(opts, "", "  ")
-			fmt.Println(string(j))
-			return nil
+			err := run(opts)
+			cobra.CheckErr(err)
+			return err
 		},
 		// 设置命令行运行时的参数检查，不需要指定命令行参数
 		Args: cobra.NoArgs,
@@ -53,4 +40,28 @@ func NewCommand() *cobra.Command {
 		configFileLookUpFlag = true
 	}
 	return cmd
+}
+
+// run 主要运行逻辑，负责初始化日志、解析配置、校验选项并启动服务器
+func run(opts *options.ServerOptions) error {
+	// 将读取到的配置项解析到 opts 中
+	if err := viper.Unmarshal(&opts); err != nil {
+		return err
+	}
+	if err := opts.Validate(); err != nil {
+		return err
+	}
+	// 获取应用配置，将命令行配置和应用配置分开，更加灵活处理 2 种不同的配置
+	cfg, err := opts.Config()
+	if err != nil {
+		return err
+	}
+
+	server, err := cfg.NewServer()
+	if err != nil {
+		return err
+	}
+
+	// 启动服务器
+	return server.Run()
 }
