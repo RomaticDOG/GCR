@@ -1,9 +1,14 @@
 package internal
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	mw "github.com/RomaticDOG/GCR/FastGO/internal/pkg/middleware"
 	genericOptions "github.com/RomaticDOG/GCR/FastGO/pkg/options"
@@ -41,8 +46,28 @@ func (cfg *Config) NewServer() (*Server, error) {
 func (s *Server) Run() error {
 	// 运行 http 服务器
 	slog.Info("Start to listening the incoming requests on http address", "addr", s.cfg.Addr)
-	if err := s.srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	go func() {
+		if err := s.srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error(err.Error())
+			os.Exit(1)
+		}
+	}()
+	quit := make(chan os.Signal, 1)
+	// 当执行 kill 命令时（不带参数），默认会发送 syscall.SIGTERM 信号
+	// 当执行 kill -2 命令时，会发送 syscall.SIGINT 信号（例如 CTRL + C）
+	// 当执行 kill -9 命令时，会发送 syscall.SIGKILL 信号，此信号无法被捕获，因此不用管
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	// 阻塞程序，从 quit channel 中接收信号
+	<-quit
+	slog.Info("receive signal, shutting down server...")
+	// 优雅关停
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	// 先关闭依赖的服务，再关闭被依赖的服务，限时 10 秒，超时则退出
+	if err := s.srv.Shutdown(ctx); err != nil {
+		slog.Error("Insecure server shutdown error", "error", err)
 		return err
 	}
+	slog.Info("Server exited")
 	return nil
 }
