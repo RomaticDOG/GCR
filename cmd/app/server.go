@@ -52,8 +52,9 @@ func NewCommand() *cobra.Command {
 
 // run 主要运行逻辑，负责初始化日志、解析配置、校验选项并启动服务器
 func run(opts *options.ServerOptions) error {
-	//
 	version.PrintAndExitIfRequested()
+	// 初始化日志
+	initLog()
 	// 将读取到的配置项解析到 opts 中
 	if err := viper.Unmarshal(&opts); err != nil {
 		return err
