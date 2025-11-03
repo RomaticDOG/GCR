@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/RomaticDOG/GCR/FastGO/cmd/app/options"
+	"github.com/RomaticDOG/GCR/FastGO/pkg/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -39,11 +40,16 @@ func NewCommand() *cobra.Command {
 	if flag := cmd.Flags().Lookup("config"); flag != nil {
 		configFileLookUpFlag = true
 	}
+
+	version.AddFlags(cmd.PersistentFlags())
+
 	return cmd
 }
 
 // run 主要运行逻辑，负责初始化日志、解析配置、校验选项并启动服务器
 func run(opts *options.ServerOptions) error {
+	//
+	version.PrintAndExitIfRequested()
 	// 将读取到的配置项解析到 opts 中
 	if err := viper.Unmarshal(&opts); err != nil {
 		return err
@@ -53,6 +59,7 @@ func run(opts *options.ServerOptions) error {
 	}
 	// 获取应用配置，将命令行配置和应用配置分开，更加灵活处理 2 种不同的配置
 	cfg, err := opts.Config()
+
 	if err != nil {
 		return err
 	}
