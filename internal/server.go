@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/RomaticDOG/GCR/FastGO/internal/pkg/core"
+	"github.com/RomaticDOG/GCR/FastGO/internal/pkg/errorsx"
 	mw "github.com/RomaticDOG/GCR/FastGO/internal/pkg/middleware"
 	genericOptions "github.com/RomaticDOG/GCR/FastGO/pkg/options"
 	"github.com/gin-gonic/gin"
@@ -34,10 +36,10 @@ func (cfg *Config) NewServer() (*Server, error) {
 	mws := []gin.HandlerFunc{gin.Recovery(), mw.NoCache, mw.Cors, mw.RequestID()}
 	engine.Use(mws...)
 	engine.NoRoute(func(c *gin.Context) {
-		c.JSON(http.StatusNotFound, gin.H{"code": "PageNotFound", "message": "Page not found."})
+		core.WriteResponse(c, errorsx.ErrNotFound.WithMessage("Page Not Found."), nil)
 	})
 	engine.GET("/healthz", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "OK"})
+		core.WriteResponse(c, nil, map[string]string{"status": "ok"})
 	})
 	httpSrv := &http.Server{Addr: cfg.Addr, Handler: engine}
 	return &Server{cfg: cfg, srv: httpSrv}, nil
