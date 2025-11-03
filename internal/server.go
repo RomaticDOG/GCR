@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	mw "github.com/RomaticDOG/GCR/FastGO/internal/pkg/middleware"
 	genericOptions "github.com/RomaticDOG/GCR/FastGO/pkg/options"
 	"github.com/gin-gonic/gin"
 )
@@ -24,6 +25,9 @@ type Server struct {
 // NewServer 根据配置创建服务器
 func (cfg *Config) NewServer() (*Server, error) {
 	engine := gin.New()
+	// 添加 gin.Recovery() 中间件，用来捕获任何 panic，并恢复
+	mws := []gin.HandlerFunc{gin.Recovery(), mw.NoCache, mw.Cors, mw.RequestID()}
+	engine.Use(mws...)
 	engine.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"code": "PageNotFound", "message": "Page not found."})
 	})
