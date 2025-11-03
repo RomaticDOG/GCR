@@ -1,6 +1,10 @@
 package app
 
 import (
+	"io"
+	"log/slog"
+	"os"
+
 	"github.com/RomaticDOG/GCR/FastGO/cmd/app/options"
 	"github.com/RomaticDOG/GCR/FastGO/pkg/version"
 	"github.com/spf13/cobra"
@@ -71,4 +75,51 @@ func run(opts *options.ServerOptions) error {
 
 	// 启动服务器
 	return server.Run()
+}
+
+// initLog 初始化全局日志实例
+func initLog() {
+	format := viper.GetString("log.format")
+	level := viper.GetString("log.level")
+	output := viper.GetString("log.output")
+
+	var slevel slog.Level
+	switch level {
+	case "debug":
+		slevel = slog.LevelDebug
+	case "info":
+		slevel = slog.LevelInfo
+	case "warn":
+		slevel = slog.LevelWarn
+	case "error":
+		slevel = slog.LevelError
+	default:
+		slevel = slog.LevelInfo
+	}
+
+	opts := &slog.HandlerOptions{Level: slevel}
+	var w io.Writer
+	var err error
+
+	switch output {
+	case "", "stdout":
+		w = os.Stdout
+	default:
+		w, err = os.OpenFile(output, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	var handler slog.Handler
+	switch format {
+	case "json":
+		handler = slog.NewJSONHandler(w, opts)
+	case "text":
+		handler = slog.NewTextHandler(w, opts)
+	default:
+		handler = slog.NewJSONHandler(w, opts)
+	}
+
+	slog.SetDefault(slog.New(handler))
 }

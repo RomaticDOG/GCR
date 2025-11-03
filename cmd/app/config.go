@@ -12,7 +12,7 @@ import (
 const (
 	defaultConfigFile = "sys.yaml"
 	defaultConfigDir  = "config"
-	defaultRootDir    = "../../" // 项目所在的默认根目录
+	defaultRootDir    = "../../../" // 项目所在的默认根目录
 )
 
 // onInitialize 设置需要读取的配置文件名、环境变量，并将其内容读取到 viper 中

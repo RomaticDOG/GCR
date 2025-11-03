@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"fmt"
+	"log/slog"
 
 	genericOptions "github.com/RomaticDOG/GCR/FastGO/pkg/options"
 )
@@ -22,6 +22,6 @@ func (cfg *Config) NewServer() (*Server, error) {
 }
 
 func (s *Server) Run() error {
-	fmt.Printf("Read Mysql host from config: %s\n", s.cfg.MySqlOptions.Addr)
+	slog.Info("Slog Read Mysql host from config", "mysql.addr", s.cfg.MySqlOptions.Addr)
 	return nil
 }

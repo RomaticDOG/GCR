@@ -6,3 +6,8 @@ mysql:
   max-idle-conns: 10            # 最大空闲连接数
   max-open-conns: 50            # 最大打开连接数
   max-conns-life-time: 3600     # 连接最大存活时间（秒）
+
+log:
+  format: text
+  level: info
+  output: stdout
