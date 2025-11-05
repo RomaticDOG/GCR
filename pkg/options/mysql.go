@@ -11,13 +11,13 @@ import (
 
 // MySQLOptions MySQL 配置项结构体
 type MySQLOptions struct {
-	Addr             string        `json:"addr,omitempty" mapstructure:"addr" validate:"required,hostname_port"`
-	Username         string        `json:"username,omitempty" mapstructure:"username" validate:"required"`
+	Addr             string        `json:"addr,omitempty" mapstructure:"addr" validation:"required,hostname_port"`
+	Username         string        `json:"username,omitempty" mapstructure:"username" validation:"required"`
 	Password         string        `json:"-" mapstructure:"password"`
-	Database         string        `json:"database,omitempty" mapstructure:"database" validate:"required"`
-	MaxIdleConns     int           `json:"max-idle-conns,omitempty" mapstructure:"max-idle-conns" validate:"gte=0"`
-	MaxOpenConns     int           `json:"max-open-conns,omitempty" mapstructure:"max-open-conns" validate:"gte=0"`
-	MaxConnsLifeTime time.Duration `json:"max-conns-life-time,omitempty" mapstructure:"max-conns-life-time" validate:"gte=0"`
+	Database         string        `json:"database,omitempty" mapstructure:"database" validation:"required"`
+	MaxIdleConns     int           `json:"max-idle-conns,omitempty" mapstructure:"max-idle-conns" validation:"gte=0"`
+	MaxOpenConns     int           `json:"max-open-conns,omitempty" mapstructure:"max-open-conns" validation:"gte=0"`
+	MaxConnsLifeTime time.Duration `json:"max-conns-life-time,omitempty" mapstructure:"max-conns-life-time" validation:"gte=0"`
 }
 
 // NewMySQLOptions 返回一个零值 MySQL 配置项

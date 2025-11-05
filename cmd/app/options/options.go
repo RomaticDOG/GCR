@@ -12,22 +12,32 @@ import (
 )
 
 type ServerOptions struct {
-	MySQL *genericOptions.MySQLOptions `json:"mysql" mapstructure:"mysql"`
-	Addr  string                       `json:"addr" mapstructure:"addr"`
+	System   *genericOptions.System          `json:"system" mapstructure:"system"`
+	MySQL    *genericOptions.MySQLOptions    `json:"mysql" mapstructure:"mysql"`
+	Postgres *genericOptions.PostgresOptions `json:"postgres" mapstructure:"postgres"`
+	Addr     string                          `json:"addr" mapstructure:"addr"`
 }
 
 // NewServerOptions 创建带有默认值的 ServerOptions 实例
 func NewServerOptions() *ServerOptions {
 	return &ServerOptions{
-		MySQL: genericOptions.NewMySQLOptions(),
-		Addr:  "0.0.0.0:6666",
+		MySQL:    genericOptions.NewMySQLOptions(),
+		Postgres: genericOptions.NewPostgres(),
+		Addr:     "0.0.0.0:6666",
+		System:   genericOptions.NewSystem(),
 	}
 }
 
 // Validate 验证 ServerOptions 中的各个配置项是否规范
 func (so *ServerOptions) Validate() (err error) {
-	if err = so.MySQL.Validate(); err != nil {
-		return
+	if so.System.DBMode == "mysql" {
+		if err = so.MySQL.Validate(); err != nil {
+			return
+		}
+	} else {
+		if err = so.Postgres.Validate(); err != nil {
+			return
+		}
 	}
 	if err = addrValidate(so.Addr); err != nil {
 		return
@@ -37,8 +47,10 @@ func (so *ServerOptions) Validate() (err error) {
 
 func (so *ServerOptions) Config() (*internal.Config, error) {
 	return &internal.Config{
-		MySqlOptions: so.MySQL,
-		Addr:         so.Addr,
+		MySqlOptions:    so.MySQL,
+		PostgresOptions: so.Postgres,
+		System:          so.System,
+		Addr:            so.Addr,
 	}, nil
 }
 

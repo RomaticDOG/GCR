@@ -3,7 +3,6 @@ package errorsx
 import "net/http"
 
 var (
-	OK          = &ErrorX{Code: http.StatusOK, Message: ""}
 	ErrInternal = &ErrorX{
 		Code:    http.StatusInternalServerError,
 		Reason:  "InternalError",
@@ -23,5 +22,11 @@ var (
 		Code:    http.StatusInternalServerError,
 		Reason:  "InternalError.DBWrite",
 		Message: "DB write error",
+	}
+	// ErrBind 表示请求体绑定错误.
+	ErrBind = &ErrorX{
+		Code:    http.StatusBadRequest,
+		Reason:  "BindError",
+		Message: "Error occurred while binding the request body to the struct.",
 	}
 )

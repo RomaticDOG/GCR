@@ -1,6 +1,7 @@
 package biz
 
 import (
+	postV1 "github.com/RomaticDOG/GCR/FastGO/internal/biz/v1/post"
 	userV1 "github.com/RomaticDOG/GCR/FastGO/internal/biz/v1/user"
 	"github.com/RomaticDOG/GCR/FastGO/internal/store"
 )
@@ -10,7 +11,7 @@ type IBiz interface {
 	// UserV1 获取用户业务接口
 	UserV1() userV1.UserBiz
 	// PostV1 获取博文业务接口
-	PostV1()
+	PostV1() postV1.PostBiz
 }
 
 // biz 业务层接口的具体实现
@@ -33,5 +34,5 @@ func (b *biz) UserV1() userV1.UserBiz {
 
 // PostV1 获取用户业务层接口实例
 func (b *biz) PostV1() postV1.PostBiz {
-
+	return postV1.New(b.store)
 }
