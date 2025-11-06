@@ -8,10 +8,13 @@ import (
 	"github.com/RomaticDOG/GCR/FastGO/internal/model"
 	"github.com/RomaticDOG/GCR/FastGO/internal/pkg/contextx"
 	"github.com/RomaticDOG/GCR/FastGO/internal/pkg/conversion"
+	"github.com/RomaticDOG/GCR/FastGO/internal/pkg/errorsx"
 	"github.com/RomaticDOG/GCR/FastGO/internal/pkg/known"
 	"github.com/RomaticDOG/GCR/FastGO/internal/store"
 	apiV1 "github.com/RomaticDOG/GCR/FastGO/pkg/api/v1"
+	"github.com/RomaticDOG/GCR/FastGO/pkg/token"
 	"github.com/jinzhu/copier"
+	"github.com/onexstack/onexstack/pkg/authn"
 	"github.com/onexstack/onexstack/pkg/store/where"
 	"golang.org/x/sync/errgroup"
 )
@@ -23,6 +26,10 @@ type UserBiz interface {
 	Delete(ctx context.Context, req *apiV1.DeleteUserReq) (*apiV1.DeleteUserResp, error)
 	Get(ctx context.Context, req *apiV1.GetUserReq) (*apiV1.GetUserResp, error)
 	List(ctx context.Context, req *apiV1.ListUserReq) (*apiV1.ListUserResp, error)
+
+	Login(ctx context.Context, req *apiV1.LoginReq) (*apiV1.LoginResp, error)
+	RefreshToken(ctx context.Context, req *apiV1.RefreshTokenReq) (*apiV1.RefreshTokenResp, error)
+	ChangePassword(ctx context.Context, req *apiV1.ChangePasswordReq) (*apiV1.ChangePasswordResp, error)
 
 	UserExpansion
 }
@@ -41,6 +48,59 @@ var _ UserBiz = (*userBiz)(nil)
 // New 创建 userBiz 实例
 func New(store store.IStore) UserBiz {
 	return &userBiz{store: store}
+}
+
+// Login 用户登陆
+func (ub *userBiz) Login(ctx context.Context, req *apiV1.LoginReq) (*apiV1.LoginResp, error) {
+	whr := where.F("username", req.Username)
+	user, err := ub.store.User().Get(ctx, whr)
+	if err != nil {
+		return nil, err
+	}
+	if err = authn.Compare(user.Password, req.Password); err != nil {
+		slog.ErrorContext(ctx, "Failed to compare password", "err", err)
+		return nil, errorsx.ErrInvalidPassword
+	}
+	// 匹配成功，签发 token
+	tokenStr, expireAt, err := token.Sign(user.UserID)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to sign token", "err", err)
+		return nil, errorsx.ErrSignToken.WithMessage(err.Error())
+	}
+	return &apiV1.LoginResp{
+		Token:    tokenStr,
+		ExpireAt: expireAt,
+	}, nil
+}
+
+// RefreshToken 用于刷新用户的身份认证令牌
+func (ub *userBiz) RefreshToken(ctx context.Context, req *apiV1.RefreshTokenReq) (*apiV1.RefreshTokenResp, error) {
+	tokenStr, expireAt, err := token.Sign(contextx.UserID(ctx))
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to sign token", "err", err)
+		return nil, errorsx.ErrSignToken.WithMessage(err.Error())
+	}
+	return &apiV1.RefreshTokenResp{
+		Token:    tokenStr,
+		ExpireAt: expireAt,
+	}, nil
+}
+
+// ChangePassword 修改密码
+func (ub *userBiz) ChangePassword(ctx context.Context, req *apiV1.ChangePasswordReq) (*apiV1.ChangePasswordResp, error) {
+	user, err := ub.store.User().Get(ctx, where.T(ctx))
+	if err != nil {
+		return nil, err
+	}
+	if err = authn.Compare(user.Password, req.OldPassword); err != nil {
+		slog.ErrorContext(ctx, "Failed to compare old password", "err", err)
+		return nil, errorsx.ErrInvalidPassword
+	}
+	user.Password, _ = authn.Encrypt(req.NewPassword)
+	if err = ub.store.User().Update(ctx, user); err != nil {
+		return nil, err
+	}
+	return &apiV1.ChangePasswordResp{}, nil
 }
 
 // Create 创建用户请求

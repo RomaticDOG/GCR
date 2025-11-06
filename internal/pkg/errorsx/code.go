@@ -29,4 +29,16 @@ var (
 		Reason:  "BindError",
 		Message: "Error occurred while binding the request body to the struct.",
 	}
+	// ErrSignToken 表示签发 Token 失败.
+	ErrSignToken = &ErrorX{
+		Code:    http.StatusInternalServerError,
+		Reason:  "InternalServerError.SignToken",
+		Message: "Error occurred while signing the token.",
+	}
+	// ErrInvalidToken 表示 Token 错误.
+	ErrInvalidToken = &ErrorX{
+		Code:    http.StatusBadRequest,
+		Reason:  "BadRequest.InvalidToken",
+		Message: "Invalid token",
+	}
 )

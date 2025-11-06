@@ -12,7 +12,7 @@ import (
 )
 
 type ServerOptions struct {
-	System   *genericOptions.System          `json:"system" mapstructure:"system"`
+	System   *genericOptions.SystemOptions   `json:"system" mapstructure:"system"`
 	MySQL    *genericOptions.MySQLOptions    `json:"mysql" mapstructure:"mysql"`
 	Postgres *genericOptions.PostgresOptions `json:"postgres" mapstructure:"postgres"`
 	Addr     string                          `json:"addr" mapstructure:"addr"`

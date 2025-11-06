@@ -2,6 +2,7 @@ package known
 
 const (
 	XRequestID = "X-Request-Id" // 上下文键名称，用来表示请求 ID
+	XUserID    = "x-user-id"    // 用来定义上下文的键，代表请求用户 ID. UserID 整个用户生命周期唯一.
 )
 
 // 定义其他常量.

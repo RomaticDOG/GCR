@@ -3,6 +3,11 @@ package errorsx
 import "net/http"
 
 var (
+	ErrInvalidPassword = &ErrorX{
+		Code:    http.StatusUnauthorized,
+		Reason:  "Unauthorized.InvalidPassword",
+		Message: "Password is incorrect.",
+	}
 	ErrUsernameEmpty = &ErrorX{
 		Code:    http.StatusBadRequest,
 		Reason:  "BadRequest.UsernameEmpty",

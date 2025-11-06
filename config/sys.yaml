@@ -1,5 +1,8 @@
 system:
   db-mode: "postgres"
+  jwt:
+    key: "Rtg8BPKNEf2mB4mgvKONGPZZQSaJWNLijxR42qRgq0iBb5" # 用于签发和解析 Token 的密钥
+    expiration: 1000h                                     # 签发 Token 的过期时间
 
 mysql:
   addr: "127.0.0.1:3306"        # 数据库地址（含端口）

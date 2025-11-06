@@ -14,10 +14,12 @@ import (
 	"github.com/RomaticDOG/GCR/FastGO/internal/handler"
 	"github.com/RomaticDOG/GCR/FastGO/internal/pkg/core"
 	"github.com/RomaticDOG/GCR/FastGO/internal/pkg/errorsx"
+	"github.com/RomaticDOG/GCR/FastGO/internal/pkg/known"
 	mw "github.com/RomaticDOG/GCR/FastGO/internal/pkg/middleware"
 	"github.com/RomaticDOG/GCR/FastGO/internal/pkg/validation"
-	store "github.com/RomaticDOG/GCR/FastGO/internal/store"
+	"github.com/RomaticDOG/GCR/FastGO/internal/store"
 	genericOptions "github.com/RomaticDOG/GCR/FastGO/pkg/options"
+	"github.com/RomaticDOG/GCR/FastGO/pkg/token"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -26,7 +28,8 @@ import (
 type Config struct {
 	MySqlOptions    *genericOptions.MySQLOptions
 	PostgresOptions *genericOptions.PostgresOptions
-	System          *genericOptions.System
+	System          *genericOptions.SystemOptions
+	Expiration      time.Duration
 	Addr            string
 }
 
@@ -56,6 +59,7 @@ func (cfg *Config) initDB() (db *gorm.DB, err error) {
 
 // NewServer 根据配置创建服务器
 func (cfg *Config) NewServer() (*Server, error) {
+	token.Init(cfg.System.JWT.Key, known.XUserID, cfg.System.JWT.Expiration)
 	db, err := cfg.initDB()
 	if err != nil {
 		return nil, err
@@ -80,19 +84,22 @@ func (cfg *Config) installRESTAPI(engine *gin.Engine, s store.IStore) {
 	})
 	// 创建核心业务处理器
 	h := handler.NewHandler(biz.NewBiz(s), validation.NewValidator(s))
-
-	authMWs := []gin.HandlerFunc{}
+	engine.POST("/login", h.Login)
+	engine.PUT("/refresh-token", mw.AuthN(), h.RefreshToken)
+	var authMWs = []gin.HandlerFunc{mw.AuthN()}
 
 	// 注册 V1 版本的 api 路由
 	v1 := engine.Group("/v1")
 	{
 		userV1 := v1.Group("/user")
 		{
-			userV1.POST("", h.CreateUser)          // 创建用户
-			userV1.PUT(":userID", h.UpdateUser)    // 更新用户
-			userV1.DELETE(":userID", h.DeleteUser) // 删除用户
-			userV1.GET(":userID", h.GetUser)       // 获取用户
-			userV1.GET("", h.ListUser)             // 获取用户列表
+			userV1.POST("", h.CreateUser) // 创建用户
+			userV1.Use(authMWs...)
+			userV1.PUT(":userID/change-password", h.ChangePassword) // 修改密码
+			userV1.PUT(":userID", h.UpdateUser)                     // 更新用户
+			userV1.DELETE(":userID", h.DeleteUser)                  // 删除用户
+			userV1.GET(":userID", h.GetUser)                        // 获取用户
+			userV1.GET("", h.ListUser)                              // 获取用户列表
 		}
 
 		postV1 := v1.Group("/post", authMWs...)

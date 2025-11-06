@@ -38,6 +38,46 @@ type CreateUserReq struct {
 	Phone string `json:"phone"`
 }
 
+// LoginReq 表示登录请求
+type LoginReq struct {
+	// Username 表示用户名称
+	Username string `json:"username"`
+	// Password 表示用户密码
+	Password string `json:"password"`
+}
+
+// LoginResp 表示登录响应
+type LoginResp struct {
+	// Token 表示返回的身份验证令牌
+	Token string `json:"token"`
+	// ExpireAt 表示该 token 的过期时间
+	ExpireAt time.Time `json:"expireAt"`
+}
+
+// RefreshTokenRequest 表示刷新令牌的请求
+type RefreshTokenReq struct {
+}
+
+// RefreshTokenResp 表示刷新令牌的响应
+type RefreshTokenResp struct {
+	// Token 表示返回的身份验证令牌
+	Token string `json:"token"`
+	// ExpireAt 表示该 token 的过期时间
+	ExpireAt time.Time `json:"expireAt"`
+}
+
+// ChangePasswordReq 表示修改密码请求
+type ChangePasswordReq struct {
+	// OldPassword 表示当前密码
+	OldPassword string `json:"oldPassword"`
+	// NewPassword 表示准备修改的新密码
+	NewPassword string `json:"newPassword"`
+}
+
+// ChangePasswordResp 表示修改密码响应
+type ChangePasswordResp struct {
+}
+
 // CreateUserResp 表示创建用户响应
 type CreateUserResp struct {
 	// UserID 表示新创建的用户 ID
